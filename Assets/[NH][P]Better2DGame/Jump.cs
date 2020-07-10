@@ -11,11 +11,13 @@ namespace Better2DGame
         bool jumpKeep = false;
         bool standInFloor = false;
         bool secondJump = true;
+        bool fastFalling = false;
         void UpdateInput()
         {
             // jumpStart = GameInput.Jump;
             jumpStart = Input.GetKeyDown(KeyCode.X);
             jumpKeep = Input.GetKey(KeyCode.X);
+            fastFalling = Input.GetKey(KeyCode.DownArrow);
         }
         private void OnTriggerEnter2D(Collider2D collision)
         {
@@ -38,7 +40,8 @@ namespace Better2DGame
         public bool doubleJump = true;
         [Range(0, 10)] public float gravityScaleLowJump = 3f;
         [Range(0, 10)] public float gravityScaleDoubleJump = 1.4f;
-        [Range(0, 10)] public float gravityScaleFastFalling = 1.3f;
+        [Range(0, 10)] public float gravityScaleFalling = 1.3f;
+        [Range(0, 10)] public float gravityScaleFastFalling = 2f;
 
         Rigidbody2D rb;
         private void Awake()
@@ -72,7 +75,7 @@ namespace Better2DGame
                     standInFloor = false;
                 }
                 // second jump
-                else if(doubleJump && secondJump)
+                else if (doubleJump && secondJump)
                 {
                     rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
                     secondJump = false;
@@ -99,7 +102,12 @@ namespace Better2DGame
             else
             {
                 // 下降中
-                rb.gravityScale = gravity * gravityScaleFastFalling;
+                if (fastFalling)
+                    // 加速下降
+                    rb.gravityScale = gravity * gravityScaleFastFalling;
+                else
+                    // 正常下降
+                    rb.gravityScale = gravity * gravityScaleFalling;
             }
         }
     }
