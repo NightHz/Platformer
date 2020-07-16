@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Better2DGame;
+using UnityEngine.Events;
 
 namespace Better2DGame
 {
@@ -21,16 +22,24 @@ namespace Better2DGame
         [Header("Checker")]
         public Collider2D footTrigger;
 
+        // timer
+        float timerLeaveLand = 0;
+
         // state
         bool isStand = false;
         bool isJump = false;
-        bool isSecondJump = true;
+        bool isForceJump = false;
+        bool isSecondJump = false;
         private void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.isTrigger && collision.gameObject != gameObject)
             {
+                if (!isStand && timerLeaveLand > 0.12f)
+                    // 着陆
+                    OnLand?.Invoke();
                 isStand = true;
                 isJump = false;
+                isForceJump = false;
                 isSecondJump = false;
             }
         }
@@ -52,6 +61,7 @@ namespace Better2DGame
             }
             // 没有
             isStand = false;
+            timerLeaveLand = 0;
         }
 
         [Header("Ability")]
@@ -66,6 +76,9 @@ namespace Better2DGame
         [Range(0, 10)] public float gravityScaleDoubleJump = 1.4f;
         [Range(0, 10)] public float gravityScaleFalling = 1.3f;
         [Range(0, 10)] public float gravityScaleFastFalling = 2f;
+
+        [Header("Event")]
+        public UnityEvent OnLand;
 
 
         Rigidbody2D rb;
@@ -100,6 +113,8 @@ namespace Better2DGame
             jumpVelocity = 4 * jumpBasicHeight / jumpBasicTime;
             gravity = 8 * jumpBasicHeight / (jumpBasicTime * jumpBasicTime);
 #endif
+            // timer
+            timerLeaveLand += Time.fixedDeltaTime;
 
             // jump
             if (jumpStart)
@@ -110,13 +125,17 @@ namespace Better2DGame
                     rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
                     isStand = false;
                     isJump = true;
+                    isForceJump = false;
+                    isSecondJump = false;
+                    timerLeaveLand = 0;
                 }
                 // second jump
                 else if (doubleJump && !isSecondJump)
                 {
                     rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
-                    isSecondJump = true;
                     isJump = true;
+                    isForceJump = false;
+                    isSecondJump = true;
                 }
                 jumpStart = false;
             }
@@ -125,7 +144,7 @@ namespace Better2DGame
             if (rb.velocity.y > 0)
             {
                 // 上升中
-                if (jumpKeep)
+                if (jumpKeep || isForceJump)
                 {
                     // 保持摁下跳跃
                     if (!doubleJump || !isSecondJump)
@@ -154,6 +173,16 @@ namespace Better2DGame
         private void OnDisable()
         {
             jumpStart = false;
+        }
+
+        public void ForceJump(float intensity = 1)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpVelocity * intensity);
+            isStand = false;
+            isJump = true;
+            isForceJump = true;
+            isSecondJump = false;
+            timerLeaveLand = 0;
         }
     }
 }

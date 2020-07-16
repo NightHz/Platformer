@@ -276,6 +276,9 @@ MonoBehaviour:
   gravityScaleDoubleJump: 1.4
   gravityScaleFalling: 1.3
   gravityScaleFastFalling: 2
+  OnLand:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &106226739
 MonoBehaviour:
   m_ObjectHideFlags: 0
