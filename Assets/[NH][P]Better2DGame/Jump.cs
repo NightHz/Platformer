@@ -18,16 +18,17 @@ namespace Better2DGame
             fastFalling = Input.GetKey(KeyCode.DownArrow);
         }
 
+        // state
         bool standInFloor = false;
         bool isJump = false;
-        bool secondJump = true;
+        bool isSecondJump = true;
         private void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.isTrigger)
             {
                 standInFloor = true;
-                secondJump = true;
                 isJump = false;
+                isSecondJump = false;
             }
         }
         private void OnTriggerExit2D(Collider2D collision)
@@ -36,15 +37,19 @@ namespace Better2DGame
                 standInFloor = false;
         }
 
+        [Header("Ability")]
+        public bool doubleJump = true;
+
+        [Header("Parameter")]
         [Range(0, 8)] public float jumpBasicHeight = 3.4f;
         [Range(0, 3)] public float jumpBasicTime = 1f;
         float jumpVelocity = 0;
         float gravity = 0;
-        public bool doubleJump = true;
         [Range(0, 10)] public float gravityScaleLowJump = 3f;
         [Range(0, 10)] public float gravityScaleDoubleJump = 1.4f;
         [Range(0, 10)] public float gravityScaleFalling = 1.3f;
         [Range(0, 10)] public float gravityScaleFastFalling = 2f;
+
 
         Rigidbody2D rb;
         Animator ani;
@@ -53,6 +58,7 @@ namespace Better2DGame
             rb = GetComponent<Rigidbody2D>();
             ani = GetComponent<Animator>();
         }
+
         private void Start()
         {
             // set global gravity
@@ -67,7 +73,8 @@ namespace Better2DGame
         {
             UpdateInput();
 
-            ani.SetBool("isJump", isJump);
+            // animation
+            ani?.SetBool("isJump", isJump);
         }
         private void FixedUpdate()
         {
@@ -88,14 +95,15 @@ namespace Better2DGame
                     isJump = true;
                 }
                 // second jump
-                else if (doubleJump && secondJump)
+                else if (doubleJump && !isSecondJump)
                 {
                     rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
-                    secondJump = false;
+                    isSecondJump = true;
                     isJump = true;
                 }
                 jumpStart = false;
             }
+
             // adjust gravity
             if (rb.velocity.y > 0)
             {
@@ -103,7 +111,7 @@ namespace Better2DGame
                 if (jumpKeep)
                 {
                     // 保持摁下跳跃
-                    if (!doubleJump || secondJump)
+                    if (!doubleJump || !isSecondJump)
                         // 第一次跳跃
                         rb.gravityScale = gravity;
                     else
@@ -111,7 +119,7 @@ namespace Better2DGame
                         rb.gravityScale = gravity * gravityScaleDoubleJump;
                 }
                 else
-                    // 停止摁下条约——低高度跳跃
+                    // 低高度跳跃
                     rb.gravityScale = gravity * gravityScaleLowJump;
             }
             else
@@ -124,6 +132,11 @@ namespace Better2DGame
                     // 正常下降
                     rb.gravityScale = gravity * gravityScaleFalling;
             }
+        }
+
+        private void OnDisable()
+        {
+            jumpStart = false;
         }
     }
 }

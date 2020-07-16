@@ -19,18 +19,22 @@ namespace Better2DGame
                 moveInput = 0;
         }
 
-        Rigidbody2D rb;
-        SpriteRenderer sr;
-        Animator ani;
+        [Header("Parameter")]
         [Range(0, 20)] public float moveVelocity = 8f;
         [Range(0, 1)] public float speedUpTime = 0.35f;
         [Range(0, 1)] public float speedDownTime = 0.1f;
+
+
+        Rigidbody2D rb;
+        SpriteRenderer sr;
+        Animator ani;
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
             sr = GetComponent<SpriteRenderer>();
             ani = GetComponent<Animator>();
         }
+
         private void Update()
         {
             UpdateInput();
@@ -41,16 +45,16 @@ namespace Better2DGame
             else if (moveInput < 0)
                 sr.flipX = true;
 
-            ani.SetBool("isStop", rb.velocity.x == 0);
+            // animation
+            ani?.SetBool("isStop", rb.velocity.x == 0);
         }
         private void FixedUpdate()
         {
             // move
             float deltaVel = moveVelocity * moveInput - rb.velocity.x;
-            float change = moveVelocity / (deltaVel * rb.velocity.x > 0 ? speedUpTime : speedDownTime) * Time.deltaTime;
+            float change = moveVelocity / (deltaVel * rb.velocity.x > 0 ? speedUpTime : speedDownTime) * Time.fixedDeltaTime;
             change = Mathf.Min(Mathf.Abs(deltaVel), change);
             rb.velocity += new Vector2(change * Mathf.Sign(deltaVel), 0);
-
         }
     }
 }
