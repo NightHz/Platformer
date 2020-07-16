@@ -9,22 +9,25 @@ namespace Better2DGame
     {
         bool jumpStart = false;
         bool jumpKeep = false;
-        bool standInFloor = false;
-        bool secondJump = true;
         bool fastFalling = false;
         void UpdateInput()
         {
             // jumpStart = GameInput.Jump;
-            jumpStart = Input.GetKeyDown(KeyCode.X);
+            jumpStart = jumpStart || Input.GetKeyDown(KeyCode.X);
             jumpKeep = Input.GetKey(KeyCode.X);
             fastFalling = Input.GetKey(KeyCode.DownArrow);
         }
+
+        bool standInFloor = false;
+        bool isJump = false;
+        bool secondJump = true;
         private void OnTriggerEnter2D(Collider2D collision)
         {
             if (!collision.isTrigger)
             {
                 standInFloor = true;
                 secondJump = true;
+                isJump = false;
             }
         }
         private void OnTriggerExit2D(Collider2D collision)
@@ -44,9 +47,14 @@ namespace Better2DGame
         [Range(0, 10)] public float gravityScaleFastFalling = 2f;
 
         Rigidbody2D rb;
+        Animator ani;
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
+            ani = GetComponent<Animator>();
+        }
+        private void Start()
+        {
             // set global gravity
             Physics2D.gravity = new Vector2(0, -1);
             Debug.Log("Jump Script sets 2d gravity to (0,-1)");
@@ -57,13 +65,17 @@ namespace Better2DGame
         }
         private void Update()
         {
+            UpdateInput();
+
+            ani.SetBool("isJump", isJump);
+        }
+        private void FixedUpdate()
+        {
 #if UNITY_EDITOR
             // update jump velocity and gravity
             jumpVelocity = 4 * jumpBasicHeight / jumpBasicTime;
             gravity = 8 * jumpBasicHeight / (jumpBasicTime * jumpBasicTime);
 #endif
-
-            UpdateInput();
 
             // jump
             if (jumpStart)
@@ -73,13 +85,16 @@ namespace Better2DGame
                 {
                     rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
                     standInFloor = false;
+                    isJump = true;
                 }
                 // second jump
                 else if (doubleJump && secondJump)
                 {
                     rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
                     secondJump = false;
+                    isJump = true;
                 }
+                jumpStart = false;
             }
             // adjust gravity
             if (rb.velocity.y > 0)
