@@ -18,23 +18,40 @@ namespace Better2DGame
             fastFalling = Input.GetKey(KeyCode.DownArrow);
         }
 
+        [Header("Checker")]
+        public Collider2D footTrigger;
+
         // state
-        bool standInFloor = false;
+        bool isStand = false;
         bool isJump = false;
         bool isSecondJump = true;
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (!collision.isTrigger)
+            if (!collision.isTrigger && collision.gameObject != gameObject)
             {
-                standInFloor = true;
+                isStand = true;
                 isJump = false;
                 isSecondJump = false;
             }
         }
         private void OnTriggerExit2D(Collider2D collision)
         {
-            if (!collision.isTrigger)
-                standInFloor = false;
+            if (collision.isTrigger)
+                return;
+
+            // 检查是否还有正在接触的碰撞箱
+            List<Collider2D> colliders = new List<Collider2D>();
+            footTrigger.GetContacts(colliders);
+            foreach(Collider2D collider in colliders)
+            {
+                if (!collider.isTrigger && collider.gameObject != gameObject)
+                {
+                    // 有
+                    return;
+                }
+            }
+            // 没有
+            isStand = false;
         }
 
         [Header("Ability")]
@@ -88,10 +105,10 @@ namespace Better2DGame
             if (jumpStart)
             {
                 // first jump
-                if (standInFloor)
+                if (isStand)
                 {
                     rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
-                    standInFloor = false;
+                    isStand = false;
                     isJump = true;
                 }
                 // second jump
